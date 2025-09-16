@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project_simpl/aunt/login.dart';
 import 'package:project_simpl/aunt/registration_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -48,6 +49,10 @@ class HomeScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () {
                           // TODO: переход на вход
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LogIn()),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,

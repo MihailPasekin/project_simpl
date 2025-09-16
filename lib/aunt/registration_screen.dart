@@ -161,6 +161,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.blueAccent),
         filled: true,
+        // ignore: deprecated_member_use
         fillColor: Colors.white.withOpacity(0.9),
         hintText: hint,
         border: OutlineInputBorder(
