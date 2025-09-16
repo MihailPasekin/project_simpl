@@ -1,30 +1,28 @@
-# Flutter / Dart
+# Flutter/Dart
 .dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
 .packages
 .pub-cache/
+.pub/
 build/
-.idea/
-.vscode/
-*.iml
-
-# iOS
+coverage/
 ios/Pods/
-Pods/
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-ios/Flutter/Generated.xcconfig
-ios/Runner/GeneratedPluginRegistrant.*
-
-# Android
 android/.gradle/
-**/build/
+android/app/build/
+flutter_export_environment.sh
+
+# Xcode
+DerivedData/
+*.xcworkspace
+*.xcuserstate
+*.xcuserdatad
+*.xccheckout
 
 # macOS
-.macos/
-
-# misc
-*.log
-*.lock
 .DS_Store
+
+# VS Code
+.vscode/
+.idea/
+
+# Logs
+*.log
