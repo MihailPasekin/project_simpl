@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/function/registrationValidators.dart';
+import 'package:project_simpl/database/database_helper.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -13,6 +14,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  final db = DatabaseHelper.instance; // ✅ для SQLite
 
   @override
   void dispose() {
@@ -29,7 +32,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 🔵 Фон (градиент)
+          // 🔵 Фон
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -40,15 +43,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
           ),
 
-          // 🔹 Контент по центру
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Center(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // 🔙 Назад + Заголовок
+                    // Назад + Заголовок
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -72,11 +73,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                       ],
                     ),
-                    // 📝 Форма
+
+                    const SizedBox(height: 32),
+
+                    // Форма
                     Form(
                       key: _formKey,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           _buildTextField(
                             controller: _nameController,
@@ -101,16 +104,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                           const SizedBox(height: 32),
 
-                          // Кнопка
+                          // Кнопка Зарегистрироваться
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
+                                  await db.insertUser({
+                                    "name": _nameController.text,
+                                    "email": _emailController.text,
+                                    "password": _passwordController.text,
+                                  });
+
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("Регистрация успешна!"),
                                     ),
+                                  );
+
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    "/login",
                                   );
                                 }
                               },
@@ -146,7 +160,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  /// 🔧 Вынес поля в отдельный метод для чистоты
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
@@ -161,7 +174,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.blueAccent),
         filled: true,
-        // ignore: deprecated_member_use
         fillColor: Colors.white.withOpacity(0.9),
         hintText: hint,
         border: OutlineInputBorder(
