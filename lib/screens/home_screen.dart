@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:project_simpl/screens/add_expense_screen.dart';
+import 'package:project_simpl/screens/add_income_screen.dart';
 import 'package:project_simpl/screens/income_chart.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  final int userId;
+  const HomeScreen({super.key, required this.userId});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,8 +138,20 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: добавить расход
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddExpenseScreen(
+                                userId: widget.userId,
+                              ), // пока userId=1
+                            ),
+                          );
+
+                          if (result == true) {
+                            // можно обновить список транзакций или график
+                            setState(() {});
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
@@ -140,6 +160,7 @@ class HomeScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
+
                         child: const Text(
                           "Расход",
                           style: TextStyle(
@@ -152,8 +173,20 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: добавить доход
+                        onPressed: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddIncomeScreen(
+                                userId: widget.userId,
+                              ), // пока userId=1
+                            ),
+                          );
+
+                          if (result == true) {
+                            // можно обновить список транзакций или график
+                            setState(() {});
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
