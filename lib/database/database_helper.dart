@@ -129,9 +129,9 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
-}
 
-Future<int> deleteUser(int userId, dynamic instance) async {
-  final db = await instance.database;
-  return await db.delete('users', where: 'userId = ?', whereArgs: [userId]);
+  Future<int> deleteUser(int userId) async {
+    final db = await instance.database;
+    return await db.delete('users', where: 'userId = ?', whereArgs: [userId]);
+  }
 }
