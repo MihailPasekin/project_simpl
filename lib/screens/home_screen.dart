@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:project_simpl/screens/add_account_screen.dart';
 import 'package:project_simpl/screens/add_expense_screen.dart';
 import 'package:project_simpl/screens/add_income_screen.dart';
 import 'package:project_simpl/screens/income_chart.dart';
@@ -56,8 +57,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       size: 32,
                     ),
-                    onPressed: () {
-                      // TODO: добавить новую операцию
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddAccountScreen(
+                            userId: widget.userId,
+                          ), // пока userId=1
+                        ),
+                      );
+
+                      if (result == true) {
+                        // можно обновить список транзакций или график
+                        setState(() {});
+                      }
                     },
                   ),
                   const SizedBox(width: 16),

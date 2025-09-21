@@ -37,7 +37,18 @@ class DatabaseHelper {
       updatedAt TEXT NOT NULL
     )
   ''');
-
+    // Таблица счетов
+    await db.execute('''
+  CREATE TABLE accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    balance REAL NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+  )
+''');
     await db.execute('''
     CREATE TABLE transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,6 +108,11 @@ class DatabaseHelper {
 
   // ================== TRANSACTIONS ==================
 
+  Future<int> insertAccount(Map<String, dynamic> account) async {
+    final db = await instance.database;
+    return await db.insert("accounts", account);
+  }
+
   Future<int> insertTransaction(Map<String, dynamic> transaction) async {
     final db = await instance.database;
     return await db.insert("transactions", transaction);
@@ -133,5 +149,13 @@ class DatabaseHelper {
   Future<int> deleteUser(int userId) async {
     final db = await instance.database;
     return await db.delete('users', where: 'userId = ?', whereArgs: [userId]);
+  }
+
+  // ⚠️ Только для разработки — удаляет базу
+  Future<void> resetDatabase() async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, "app.db");
+    await deleteDatabase(path);
+    _database = null; // сбрасываем кеш, чтобы база пересоздалась заново
   }
 }
