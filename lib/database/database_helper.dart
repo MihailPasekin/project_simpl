@@ -113,6 +113,25 @@ class DatabaseHelper {
     return await db.insert("accounts", account);
   }
 
+  Future<List<Map<String, dynamic>>> getAccounts(int userId) async {
+    final db = await instance.database;
+    return await db.query(
+      "accounts",
+      where: "userId = ?",
+      whereArgs: [userId],
+      orderBy: "createdAt DESC",
+    );
+  }
+
+  Future<int> deleteAccount(int accountId) async {
+    final db = await database; // получаем экземпляр базы данных
+    return await db.delete(
+      'accounts', // имя таблицы
+      where: 'id = ?', // условие удаления
+      whereArgs: [accountId], // подставляем id счета
+    );
+  }
+
   Future<int> insertTransaction(Map<String, dynamic> transaction) async {
     final db = await instance.database;
     return await db.insert("transactions", transaction);
@@ -149,13 +168,5 @@ class DatabaseHelper {
   Future<int> deleteUser(int userId) async {
     final db = await instance.database;
     return await db.delete('users', where: 'userId = ?', whereArgs: [userId]);
-  }
-
-  // ⚠️ Только для разработки — удаляет базу
-  Future<void> resetDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, "app.db");
-    await deleteDatabase(path);
-    _database = null; // сбрасываем кеш, чтобы база пересоздалась заново
   }
 }
