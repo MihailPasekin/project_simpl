@@ -6,11 +6,10 @@ import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await deleteDatabase(
-    await getDatabasesPath() + '/app.db',
-  ); // удаляем старую базу
+  //await deleteDatabase(
+  //await getDatabasesPath() + '/app.db',
+  //); // удаляем старую базу
   runApp(MyApp());
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -26,7 +25,7 @@ class MyApp extends StatelessWidget {
       routes: {
         "/login": (context) => const LoginScreen(),
         "/registration": (context) => const RegistrationScreen(),
-        "/home": (context) => const HomeScreen(userId: 1),
+        "/home": (context) => HomeScreen(userId: 1),
       },
     );
   }

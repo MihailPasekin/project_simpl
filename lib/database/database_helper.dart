@@ -37,7 +37,18 @@ class DatabaseHelper {
       updatedAt TEXT NOT NULL
     )
   ''');
-
+    // Таблица счетов
+    await db.execute('''
+  CREATE TABLE accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    balance REAL NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+  )
+''');
     await db.execute('''
     CREATE TABLE transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +107,30 @@ class DatabaseHelper {
   }
 
   // ================== TRANSACTIONS ==================
+
+  Future<int> insertAccount(Map<String, dynamic> account) async {
+    final db = await instance.database;
+    return await db.insert("accounts", account);
+  }
+
+  Future<List<Map<String, dynamic>>> getAccounts(int userId) async {
+    final db = await instance.database;
+    return await db.query(
+      "accounts",
+      where: "userId = ?",
+      whereArgs: [userId],
+      orderBy: "createdAt DESC",
+    );
+  }
+
+  Future<int> deleteAccount(int accountId) async {
+    final db = await database; // получаем экземпляр базы данных
+    return await db.delete(
+      'accounts', // имя таблицы
+      where: 'id = ?', // условие удаления
+      whereArgs: [accountId], // подставляем id счета
+    );
+  }
 
   Future<int> insertTransaction(Map<String, dynamic> transaction) async {
     final db = await instance.database;
