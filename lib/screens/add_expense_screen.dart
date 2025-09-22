@@ -4,8 +4,12 @@ import 'package:project_simpl/database/database_helper.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final int userId; // ✅ принимаем userId
-
-  const AddExpenseScreen({super.key, required this.userId});
+  final String accountName;
+  const AddExpenseScreen({
+    super.key,
+    required this.userId,
+    required this.accountName,
+  });
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();

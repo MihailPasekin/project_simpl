@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:project_simpl/screens/account_sscreen.dart';
 import 'package:project_simpl/screens/add_account_screen.dart';
 import 'package:project_simpl/screens/add_expense_screen.dart';
 import 'package:project_simpl/screens/add_income_screen.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // ignore: unused_element
   Future<void> _deleteAccount(int accountId) async {
     // показываем подтверждение удаления
     final confirm = await showDialog<bool>(
@@ -245,11 +247,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
+                          //final result = await Navigator.push(context,MaterialPageRoute(builder: (context) =>AddExpenseScreen(userId: widget.userId),),);
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  AddExpenseScreen(userId: widget.userId),
+                              builder: (context) => AccountsScreen(
+                                userId: widget.userId,
+                                source: "expense",
+                              ),
                             ),
                           );
                           if (result == true) {
@@ -276,11 +281,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
+                          //final result = await Navigator.push(context,MaterialPageRoute(builder: (context) =>AddIncomeScreen(userId: widget.userId),),
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  AddIncomeScreen(userId: widget.userId),
+                              builder: (context) => AccountsScreen(
+                                userId: widget.userId,
+                                source: "income",
+                              ),
                             ),
                           );
                           if (result == true) {

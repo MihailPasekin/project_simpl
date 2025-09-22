@@ -4,8 +4,12 @@ import 'package:project_simpl/database/database_helper.dart';
 
 class AddIncomeScreen extends StatefulWidget {
   final int userId; // 🔹 Передаём ID пользователя
-
-  const AddIncomeScreen({super.key, required this.userId});
+  final String accountName;
+  const AddIncomeScreen({
+    super.key,
+    required this.userId,
+    required this.accountName,
+  });
 
   @override
   State<AddIncomeScreen> createState() => _AddIncomeScreenState();
