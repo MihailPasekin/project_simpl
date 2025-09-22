@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/account.dart'; // ✅ не забудь подключить модель
 
 class AddAccountScreen extends StatefulWidget {
   final int userId;
@@ -16,13 +17,15 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   void _saveAccount() async {
     if (_nameController.text.isEmpty) return;
 
-    await DatabaseHelper.instance.insertAccount({
-      "userId": widget.userId,
-      "name": _nameController.text,
-      "balance": double.tryParse(_balanceController.text) ?? 0,
-      "createdAt": DateTime.now().toIso8601String(),
-      "updatedAt": DateTime.now().toIso8601String(),
-    });
+    final account = Account(
+      userId: widget.userId,
+      name: _nameController.text,
+      balance: double.tryParse(_balanceController.text) ?? 0,
+      createdAt: DateTime.now().toIso8601String(),
+      updatedAt: DateTime.now().toIso8601String(),
+    );
+
+    await DatabaseHelper.instance.insertAccount(account);
 
     Navigator.pop(context, true);
   }

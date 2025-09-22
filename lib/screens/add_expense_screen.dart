@@ -70,7 +70,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Добавить расход"),
+        title: Text("Счет ${widget.accountName}"),
         backgroundColor: Colors.redAccent,
       ),
       body: Padding(
@@ -89,8 +89,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   prefixIcon: Icon(Icons.attach_money),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? "Введите сумму" : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Введите сумму";
+                  }
+                  // Проверка, является ли введённое значение числом
+                  final number = double.tryParse(value.replaceAll(',', '.'));
+                  if (number == null) {
+                    return "Введите корректное число";
+                  }
+                  return null; // Всё ок
+                },
               ),
               const SizedBox(height: 16),
 

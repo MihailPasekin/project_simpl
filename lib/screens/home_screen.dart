@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:project_simpl/object/account.dart';
 import 'package:project_simpl/screens/account_sscreen.dart';
 import 'package:project_simpl/screens/add_account_screen.dart';
 import 'package:project_simpl/screens/add_expense_screen.dart';
@@ -10,7 +11,7 @@ import 'package:project_simpl/widget/graph_with_circles.dart';
 
 class HomeScreen extends StatefulWidget {
   final int userId;
-  HomeScreen({super.key, required this.userId});
+  const HomeScreen({super.key, required this.userId});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -18,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final db = DatabaseHelper.instance;
-  List<Map<String, dynamic>> _accounts = [];
+  List<Account> _accounts = [];
   double _totalBalance = 0;
 
   @override
@@ -33,14 +34,12 @@ class _HomeScreenState extends State<HomeScreen> {
       _accounts = accounts;
       _totalBalance = accounts.fold<double>(
         0,
-        (sum, acc) => sum + (acc["balance"] as num).toDouble(),
-      );
+        (sum, acc) => sum + acc.balance,
+      ); // ✅ теперь это List<Account>
     });
   }
 
-  // ignore: unused_element
-  Future<void> _deleteAccount(int accountId) async {
-    // показываем подтверждение удаления
+  Future<void> _deleteAccount(Account account) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -60,8 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirm == true) {
-      await db.deleteAccount(accountId); // удаляем из базы
-      _loadAccounts(); // обновляем список и баланс
+      await db.deleteAccount(account.id!);
+      _loadAccounts();
     }
   }
 
@@ -74,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (result == true) {
-      _loadAccounts(); // 🔄 обновляем список и баланс
+      _loadAccounts();
     }
   }
 
@@ -145,11 +144,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           final account = _accounts[index];
 
                           return Dismissible(
-                            key: Key(
-                              account["id"].toString(),
-                            ), // уникальный ключ
-                            direction:
-                                DismissDirection.endToStart, // свайп влево
+                            key: Key(account.id.toString()),
+                            direction: DismissDirection.endToStart,
                             background: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -165,7 +161,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             confirmDismiss: (direction) async {
-                              // показываем подтверждение удаления
                               return await showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -192,12 +187,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             },
                             onDismissed: (direction) async {
-                              await db.deleteAccount(account["id"]);
-                              _loadAccounts(); // обновляем список и баланс
+                              await db.deleteAccount(account.id!);
+                              _loadAccounts();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    "Счёт '${account["name"]}' удалён",
+                                    "Счёт '${account.name}' удалён",
                                   ),
                                 ),
                               );
@@ -213,11 +208,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white,
                                 ),
                                 title: Text(
-                                  account["name"],
+                                  account.name,
                                   style: const TextStyle(color: Colors.white),
                                 ),
                                 subtitle: Text(
-                                  "Баланс: ${account["balance"].toStringAsFixed(2)} €",
+                                  "Баланс: ${account.balance.toStringAsFixed(2)} €",
                                   style: const TextStyle(color: Colors.white70),
                                 ),
                               ),
@@ -238,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                GraphWithCircles(),
+                const GraphWithCircles(),
                 const SizedBox(height: 30),
 
                 // 🔹 Кнопки под графиком
@@ -247,7 +242,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
-                          //final result = await Navigator.push(context,MaterialPageRoute(builder: (context) =>AddExpenseScreen(userId: widget.userId),),);
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -281,7 +275,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
-                          //final result = await Navigator.push(context,MaterialPageRoute(builder: (context) =>AddIncomeScreen(userId: widget.userId),),
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
