@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/user.dart';
 
 class AddIncomeScreen extends StatefulWidget {
-  final int userId; // 🔹 Передаём ID пользователя
+  final User user;
   final String accountName;
   const AddIncomeScreen({
     super.key,
-    required this.userId,
+    required this.user,
     required this.accountName,
   });
 
@@ -34,7 +35,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   Future<void> _saveIncome() async {
     if (_formKey.currentState!.validate()) {
       final income = {
-        "userId": widget.userId,
+        "userId": widget.user.id!,
         "type": "income",
         "category": _category,
         "amount": double.parse(_amountController.text),

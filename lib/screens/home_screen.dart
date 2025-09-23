@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddAccountScreen(userId: widget.user.id!),
+        builder: (context) => AddAccountScreen(user: widget.user),
       ),
     );
 
@@ -266,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AccountsScreen(
-                                userId: widget.user.id!,
+                                user: widget.user,
                                 source: "expense",
                               ),
                             ),
@@ -299,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AccountsScreen(
-                                userId: widget.user.id!,
+                                user: widget.user,
                                 source: "income",
                               ),
                             ),

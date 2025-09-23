@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/object/account.dart';
+import 'package:project_simpl/object/user.dart';
 import 'package:project_simpl/screens/add_expense_screen.dart';
 import 'package:project_simpl/screens/add_income_screen.dart';
 import 'add_account_screen.dart';
 
 class AccountsScreen extends StatefulWidget {
-  final int userId;
+  final User user;
   final String source; // "expense" или "income"
 
-  const AccountsScreen({super.key, required this.userId, required this.source});
+  const AccountsScreen({super.key, required this.user, required this.source});
 
   @override
   State<AccountsScreen> createState() => _AccountsScreenState();
@@ -26,7 +27,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
   }
 
   Future<void> _loadAccounts() async {
-    final accounts = await db.getAccounts(widget.userId); // List<Account>
+    final accounts = await db.getAccounts(widget.user.id!); // List<Account>
     setState(() {
       _accounts = accounts;
     });
@@ -36,7 +37,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddAccountScreen(userId: widget.userId),
+        builder: (context) => AddAccountScreen(user: widget.user),
       ),
     );
 
@@ -144,7 +145,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AddExpenseScreen(
-                                userId: widget.userId,
+                                user: widget.user,
                                 accountName: account.name,
                               ),
                             ),
@@ -154,7 +155,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AddIncomeScreen(
-                                userId: widget.userId,
+                                user: widget.user,
                                 accountName: account.name,
                               ),
                             ),

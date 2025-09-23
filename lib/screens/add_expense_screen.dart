@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/user.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  final int userId; // ✅ принимаем userId
+  final User user;
   final String accountName;
   const AddExpenseScreen({
     super.key,
-    required this.userId,
     required this.accountName,
+    required this.user,
   });
 
   @override
@@ -34,7 +35,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _saveExpense() async {
     if (_formKey.currentState!.validate()) {
       final expense = {
-        "userId": widget.userId, // ✅ теперь берём текущего пользователя
+        "userId": widget.user.id!, // ✅ теперь берём текущего пользователя
         "type": "expense",
         "category": _category,
         "amount": double.parse(_amountController.text),
