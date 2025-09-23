@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/account.dart';
 import 'package:project_simpl/object/user.dart';
 
 class AddIncomeScreen extends StatefulWidget {
   final User user;
-  final String accountName;
-  const AddIncomeScreen({
-    super.key,
-    required this.user,
-    required this.accountName,
-  });
+  final Account account;
+  const AddIncomeScreen({super.key, required this.user, required this.account});
 
   @override
   State<AddIncomeScreen> createState() => _AddIncomeScreenState();
@@ -71,7 +68,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Счет ${widget.accountName}"),
+        title: Text("Счет ${widget.account.name}"),
         backgroundColor: Colors.green,
       ),
       body: Padding(
@@ -79,7 +76,17 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                "Баланс ${widget.account.balance} €",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
               // 💰 Сумма
               TextFormField(
                 controller: _amountController,

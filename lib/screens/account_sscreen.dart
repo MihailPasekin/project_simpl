@@ -146,7 +146,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             MaterialPageRoute(
                               builder: (context) => AddExpenseScreen(
                                 user: widget.user,
-                                accountName: account.name,
+                                account: account,
                               ),
                             ),
                           );
@@ -156,7 +156,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             MaterialPageRoute(
                               builder: (context) => AddIncomeScreen(
                                 user: widget.user,
-                                accountName: account.name,
+                                account: account,
                               ),
                             ),
                           );

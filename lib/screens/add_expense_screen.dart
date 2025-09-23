@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/account.dart';
 import 'package:project_simpl/object/user.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final User user;
-  final String accountName;
+  final Account account;
   const AddExpenseScreen({
     super.key,
-    required this.accountName,
+    required this.account,
     required this.user,
   });
 
@@ -71,7 +72,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Счет ${widget.accountName}"),
+        title: Text("Счет ${widget.account.name}"),
         backgroundColor: Colors.redAccent,
       ),
       body: Padding(
@@ -81,6 +82,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                "Баланс ${widget.account.balance} €",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
               // 💰 Сумма
               TextFormField(
                 controller: _amountController,
