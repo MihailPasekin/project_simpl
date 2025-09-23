@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,23 +23,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final user = await DatabaseHelper.instance.getUser(
-        _emailController.text,
-        _passwordController.text,
-      );
+      try {
+        // Получаем пользователя из базы
+        final user = await DatabaseHelper.instance.loginUser(
+          _emailController.text,
+          _passwordController.text,
+        );
 
-      if (user != null) {
-        // ✅ Вход успешен
+        if (user != null) {
+          // ✅ Вход успешен
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Вход выполнен ✅")));
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+          );
+        } else {
+          // ❌ Неверный email или пароль
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Неверный email или пароль ❌")),
+          );
+        }
+      } catch (e) {
+        // ❌ Ошибка базы данных
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Вход выполнен ✅")));
-
-        Navigator.pushReplacementNamed(context, "/home");
-      } else {
-        // ❌ Ошибка входа
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Неверный email или пароль ❌")),
-        );
+        ).showSnackBar(SnackBar(content: Text("Ошибка входа: $e")));
       }
     }
   }

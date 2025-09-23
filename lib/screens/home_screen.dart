@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:project_simpl/object/account.dart';
+import 'package:project_simpl/object/user.dart';
 import 'package:project_simpl/screens/account_sscreen.dart';
 import 'package:project_simpl/screens/add_account_screen.dart';
-import 'package:project_simpl/screens/add_expense_screen.dart';
-import 'package:project_simpl/screens/add_income_screen.dart';
+
 import 'package:project_simpl/widget/income_chart.dart';
 import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/widget/graph_with_circles.dart';
 
 class HomeScreen extends StatefulWidget {
-  final int userId;
-  const HomeScreen({super.key, required this.userId});
+  final User user;
+  const HomeScreen({super.key, required this.user});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -29,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadAccounts() async {
-    final accounts = await db.getAccounts(widget.userId);
+    final accounts = await db.getAccounts(widget.user!.id!);
     setState(() {
       _accounts = accounts;
       _totalBalance = accounts.fold<double>(
@@ -68,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddAccountScreen(userId: widget.userId),
+        builder: (context) => AddAccountScreen(userId: widget.user.id!),
       ),
     );
 
@@ -94,6 +93,27 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 🔹 Профиль пользователя
+                Card(
+                  color: widget.user.avatar != null
+                      ? Colors.blueGrey.withOpacity(0.3)
+                      : Colors.blueGrey.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: widget.user.avatar != null
+                        ? CircleAvatar(
+                            backgroundImage: NetworkImage(widget.user.avatar!),
+                          )
+                        : const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(
+                      widget.user.name,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 // 🔹 Общий баланс + кнопка ➕
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -246,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AccountsScreen(
-                                userId: widget.userId,
+                                userId: widget.user.id!,
                                 source: "expense",
                               ),
                             ),
@@ -279,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AccountsScreen(
-                                userId: widget.userId,
+                                userId: widget.user.id!,
                                 source: "income",
                               ),
                             ),
