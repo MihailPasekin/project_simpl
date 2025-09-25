@@ -131,7 +131,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   labelText: "Категория",
                   border: OutlineInputBorder(),
                 ),
-                items: ["Еда", "Транспорт", "Развлечения", "Другое"]
+                items: ["Еда", "Транспорт", "Развлечения", "Жильё", "Другое"]
                     .map(
                       (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
                     )

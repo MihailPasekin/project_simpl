@@ -123,7 +123,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                   labelText: "Категория",
                   border: OutlineInputBorder(),
                 ),
-                items: ["Зарплата", "Подарок", "Бизнес", "Другое"]
+                items: ["Еда", "Транспорт", "Развлечения", "Жильё", "Другое"]
                     .map(
                       (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
                     )

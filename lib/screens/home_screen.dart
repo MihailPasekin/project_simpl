@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                const GraphWithCircles(),
+                const PremiumPieChart(),
                 const SizedBox(height: 30),
                 Row(
                   children: [
