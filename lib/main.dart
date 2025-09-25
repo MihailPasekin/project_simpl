@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:project_simpl/aunt/login.dart';
 import 'package:project_simpl/aunt/registration_screen.dart';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   const bool resetDb = false; // 👉 меняешь на true только когда надо дропнуть
-
   // ignore: dead_code
   if (resetDb) {
     await deleteDatabase(await getDatabasesPath() + '/app.db');
   }
 
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

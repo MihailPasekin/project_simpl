@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/object/account.dart';
 import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/providers/account_provider.dart';
 
-class AddExpenseScreen extends StatefulWidget {
+class AddExpenseScreen extends ConsumerStatefulWidget {
   final User user;
   final Account account;
+
   const AddExpenseScreen({
     super.key,
     required this.account,
@@ -14,16 +17,15 @@ class AddExpenseScreen extends StatefulWidget {
   });
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   String _category = "Еда";
   DateTime _selectedDate = DateTime.now();
-
   final db = DatabaseHelper.instance;
 
   @override
@@ -34,26 +36,36 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _saveExpense() async {
-    if (_formKey.currentState!.validate()) {
-      final expense = {
-        "userId": widget.user.id!, // ✅ теперь берём текущего пользователя
-        "type": "expense",
-        "category": _category,
-        "amount": double.parse(_amountController.text),
-        "note": _noteController.text,
-        "date": _selectedDate.toIso8601String(),
-        "createdAt": DateTime.now().toIso8601String(),
-        "updatedAt": DateTime.now().toIso8601String(),
-      };
+    if (!_formKey.currentState!.validate()) return;
 
-      await db.insertTransaction(expense);
+    final amount = double.parse(_amountController.text.replaceAll(',', '.'));
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("✅ Расход сохранён")));
+    // Создаем расход
+    final expense = {
+      "userId": widget.user.id!,
+      "type": "expense",
+      "category": _category,
+      "amount": amount,
+      "note": _noteController.text,
+      "date": _selectedDate.toIso8601String(),
+      "createdAt": DateTime.now().toIso8601String(),
+      "updatedAt": DateTime.now().toIso8601String(),
+    };
 
-      Navigator.pop(context, true); // вернём результат
-    }
+    await db.insertTransaction(expense);
+
+    // 🟢 Уменьшаем баланс счета через провайдер
+    final accountsNotifier = ref.read(accountsProvider.notifier);
+    final updatedAccount = widget.account.copyWith(
+      balance: widget.account.balance - amount,
+    );
+    await accountsNotifier.updateAccountBalance(updatedAccount);
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("✅ Расход сохранён")));
+
+    Navigator.pop(context, true); // вернём результат
   }
 
   Future<void> _pickDate() async {
@@ -83,7 +95,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Баланс ${widget.account.balance} €",
+                "Баланс ${widget.account.balance.toStringAsFixed(2)} €",
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -91,6 +103,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
               // 💰 Сумма
               TextFormField(
                 controller: _amountController,
@@ -101,15 +114,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Введите сумму";
-                  }
-                  // Проверка, является ли введённое значение числом
+                  if (value == null || value.isEmpty) return "Введите сумму";
                   final number = double.tryParse(value.replaceAll(',', '.'));
-                  if (number == null) {
-                    return "Введите корректное число";
-                  }
-                  return null; // Всё ок
+                  if (number == null) return "Введите корректное число";
+                  if (number > widget.account.balance)
+                    return "Недостаточно средств";
+                  return null;
                 },
               ),
               const SizedBox(height: 16),

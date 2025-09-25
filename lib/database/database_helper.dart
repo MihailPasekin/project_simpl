@@ -146,6 +146,16 @@ class DatabaseHelper {
 
   // ================== ACCOUNTS ==================
 
+  Future<int> updateAccount(Account account) async {
+    final dbClient = await database;
+    return await dbClient.update(
+      'accounts',
+      account.toMap(),
+      where: 'id = ?',
+      whereArgs: [account.id],
+    );
+  }
+
   Future<int> insertAccount(Account account) async {
     final db = await database;
     return await db.insert(

@@ -1,83 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:project_simpl/object/account.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:project_simpl/object/user.dart';
-import 'package:project_simpl/screens/account_sscreen.dart';
+import 'package:project_simpl/providers/account_provider.dart';
 import 'package:project_simpl/screens/add_account_screen.dart';
-
-import 'package:project_simpl/widget/income_chart.dart';
-import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/screens/account_sscreen.dart';
 import 'package:project_simpl/widget/graph_with_circles.dart';
+import 'package:project_simpl/widget/income_chart.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   final User user;
   const HomeScreen({super.key, required this.user});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final db = DatabaseHelper.instance;
-  List<Account> _accounts = [];
-  double _totalBalance = 0;
-
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAccounts();
-  }
-
-  Future<void> _loadAccounts() async {
-    final accounts = await db.getAccounts(widget.user!.id!);
-    setState(() {
-      _accounts = accounts;
-      _totalBalance = accounts.fold<double>(
-        0,
-        (sum, acc) => sum + acc.balance,
-      ); // ✅ теперь это List<Account>
+    // Устанавливаем пользователя и автоматически загружаем счета
+    Future.microtask(() {
+      ref.read(accountsProvider.notifier).setUser(widget.user);
     });
-  }
-
-  Future<void> _deleteAccount(Account account) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Удалить счёт?"),
-        content: const Text("Вы уверены, что хотите удалить этот счёт?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Отмена"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Удалить", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await db.deleteAccount(account.id!);
-      _loadAccounts();
-    }
-  }
-
-  Future<void> _openAddAccountScreen() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddAccountScreen(user: widget.user),
-      ),
-    );
-
-    if (result == true) {
-      _loadAccounts();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final accounts = ref.watch(accountsProvider);
+    final accountsNotifier = ref.read(accountsProvider.notifier);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -93,11 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🔹 Профиль пользователя
+                // 🔹 Профиль
                 Card(
-                  color: widget.user.avatar != null
-                      ? Colors.blueGrey.withOpacity(0.3)
-                      : Colors.blueGrey.withOpacity(0.3),
+                  color: Colors.blueGrey.withOpacity(0.3),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -114,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // 🔹 Общий баланс + кнопка ➕
+
+                // 🔹 Общий баланс
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -127,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     Text(
-                      "${_totalBalance.toStringAsFixed(2)} €",
+                      "${accountsNotifier.totalBalance.toStringAsFixed(2)} €",
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -141,15 +92,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white,
                         size: 32,
                       ),
-                      onPressed: _openAddAccountScreen,
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AddAccountScreen(user: widget.user),
+                          ),
+                        );
+                        if (result == true) {
+                          accountsNotifier.loadAccounts();
+                        }
+                      },
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 20),
 
-                // 🔹 Список счетов
-                _accounts.isEmpty
+                // 🔹 Список аккаунтов
+                accounts.isEmpty
                     ? const Center(
                         child: Text(
                           "Нет счетов",
@@ -159,10 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     : ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: _accounts.length,
+                        itemCount: accounts.length,
                         itemBuilder: (context, index) {
-                          final account = _accounts[index];
-
+                          final account = accounts[index];
                           return Dismissible(
                             key: Key(account.id.toString()),
                             direction: DismissDirection.endToStart,
@@ -180,35 +141,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.white,
                               ),
                             ),
-                            confirmDismiss: (direction) async {
-                              return await showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text("Удалить счёт?"),
-                                  content: const Text(
-                                    "Вы уверены, что хотите удалить этот счёт?",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text("Отмена"),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: const Text(
-                                        "Удалить",
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            onDismissed: (direction) async {
-                              await db.deleteAccount(account.id!);
-                              _loadAccounts();
+                            onDismissed: (_) {
+                              accountsNotifier.deleteAccount(account.id!);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -241,9 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
 
-                const SizedBox(height: 20),
-
-                // 🔹 Расходы по месяцам
+                const SizedBox(height: 30),
                 const Text(
                   "Расходы по месяцам",
                   style: TextStyle(
@@ -255,8 +187,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 30),
                 const GraphWithCircles(),
                 const SizedBox(height: 30),
-
-                // 🔹 Кнопки под графиком
                 Row(
                   children: [
                     Expanded(
@@ -326,10 +256,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 30),
 
-                // 🔹 График доходов
                 const Text(
                   "Доходы по месяцам",
                   style: TextStyle(

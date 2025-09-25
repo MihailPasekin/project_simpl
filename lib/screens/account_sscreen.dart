@@ -1,55 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:project_simpl/database/database_helper.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:project_simpl/object/account.dart';
 import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/providers/account_provider.dart';
 import 'package:project_simpl/screens/add_expense_screen.dart';
 import 'package:project_simpl/screens/add_income_screen.dart';
 import 'add_account_screen.dart';
 
-class AccountsScreen extends StatefulWidget {
+class AccountsScreen extends ConsumerStatefulWidget {
   final User user;
   final String source; // "expense" или "income"
 
   const AccountsScreen({super.key, required this.user, required this.source});
 
   @override
-  State<AccountsScreen> createState() => _AccountsScreenState();
+  ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
 }
 
-class _AccountsScreenState extends State<AccountsScreen> {
-  final db = DatabaseHelper.instance;
-  List<Account> _accounts = [];
-
+class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAccounts();
-  }
-
-  Future<void> _loadAccounts() async {
-    final accounts = await db.getAccounts(widget.user.id!); // List<Account>
-    setState(() {
-      _accounts = accounts;
+    // Загружаем счета пользователя через провайдер
+    Future.microtask(() {
+      ref.read(accountsProvider.notifier).setUser(widget.user);
     });
   }
 
   Future<void> _openAddAccount() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => AddAccountScreen(user: widget.user),
-      ),
+      MaterialPageRoute(builder: (_) => AddAccountScreen(user: widget.user)),
     );
 
     if (result == true) {
-      _loadAccounts();
+      // Обновляем счета через провайдер
+      ref.read(accountsProvider.notifier).loadAccounts();
     }
   }
 
   Future<bool> _deleteAccount(Account account) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text("Удалить счёт?"),
         content: const Text("Вы уверены, что хотите удалить этот счёт?"),
         actions: [
@@ -66,10 +59,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
 
     if (confirm == true) {
-      await db.deleteAccount(account.id!); // Удаляем по id
-      setState(() {
-        _accounts.removeWhere((a) => a.id == account.id);
-      });
+      await ref.read(accountsProvider.notifier).deleteAccount(account.id!);
       return true;
     }
     return false;
@@ -88,6 +78,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final accounts = ref.watch(accountsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -102,7 +94,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
           IconButton(icon: const Icon(Icons.add), onPressed: _openAddAccount),
         ],
       ),
-      body: _accounts.isEmpty
+      body: accounts.isEmpty
           ? const Center(
               child: Text(
                 "Нет счетов",
@@ -110,15 +102,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
               ),
             )
           : ListView.builder(
-              itemCount: _accounts.length,
+              itemCount: accounts.length,
               itemBuilder: (context, index) {
-                final account = _accounts[index];
+                final account = accounts[index];
                 return Dismissible(
                   key: ValueKey(account.id),
                   direction: DismissDirection.endToStart,
-                  confirmDismiss: (direction) async {
-                    return await _deleteAccount(account);
-                  },
+                  confirmDismiss: (_) => _deleteAccount(account),
                   background: Container(
                     color: Colors.red,
                     alignment: Alignment.centerRight,
@@ -144,7 +134,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AddExpenseScreen(
+                              builder: (_) => AddExpenseScreen(
                                 user: widget.user,
                                 account: account,
                               ),
@@ -154,7 +144,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AddIncomeScreen(
+                              builder: (_) => AddIncomeScreen(
                                 user: widget.user,
                                 account: account,
                               ),
