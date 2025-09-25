@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/function/registrationValidators.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/user.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -110,12 +111,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
-                                  await db.insertUser({
-                                    "name": _nameController.text,
-                                    "email": _emailController.text,
-                                    "password": _passwordController.text,
-                                  });
-
+                                  final now = DateTime.now();
+                                  User newUser = User(
+                                    name: _nameController.text,
+                                    email: _emailController.text,
+                                    password: _passwordController.text,
+                                    avatar: null,
+                                    createdAt: now,
+                                    updatedAt: now,
+                                  );
+                                  await db.registerUser(newUser);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text("Регистрация успешна!"),

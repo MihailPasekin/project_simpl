@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:project_simpl/database/database_helper.dart';
+import 'package:project_simpl/object/account.dart';
+import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/providers/account_provider.dart';
 
-class AddIncomeScreen extends StatefulWidget {
-  final int userId; // 🔹 Передаём ID пользователя
-  final String accountName;
-  const AddIncomeScreen({
-    super.key,
-    required this.userId,
-    required this.accountName,
-  });
+class AddIncomeScreen extends ConsumerStatefulWidget {
+  final User user;
+  final Account account;
+  const AddIncomeScreen({super.key, required this.user, required this.account});
 
   @override
-  State<AddIncomeScreen> createState() => _AddIncomeScreenState();
+  ConsumerState<AddIncomeScreen> createState() => _AddIncomeScreenState();
 }
 
-class _AddIncomeScreenState extends State<AddIncomeScreen> {
+class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
@@ -33,11 +33,13 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 
   Future<void> _saveIncome() async {
     if (_formKey.currentState!.validate()) {
+      final amount = double.parse(_amountController.text.replaceAll(',', '.'));
+
       final income = {
-        "userId": widget.userId,
+        "userId": widget.user.id!,
         "type": "income",
         "category": _category,
-        "amount": double.parse(_amountController.text),
+        "amount": amount,
         "note": _noteController.text,
         "date": _selectedDate.toIso8601String(),
         "createdAt": DateTime.now().toIso8601String(),
@@ -46,11 +48,18 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
 
       await db.insertTransaction(income);
 
+      // Обновляем баланс через провайдер
+      final accountsNotifier = ref.read(accountsProvider.notifier);
+      final updatedAccount = widget.account.copyWith(
+        balance: widget.account.balance + amount,
+      );
+      await accountsNotifier.updateAccountBalance(updatedAccount);
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("✅ Доход сохранён")));
 
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     }
   }
 
@@ -70,7 +79,7 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Добавить доход"),
+        title: Text("Счет ${widget.account.name}"),
         backgroundColor: Colors.green,
       ),
       body: Padding(
@@ -78,7 +87,17 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                "Баланс ${widget.account.balance} €",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
               // 💰 Сумма
               TextFormField(
                 controller: _amountController,
@@ -88,8 +107,12 @@ class _AddIncomeScreenState extends State<AddIncomeScreen> {
                   prefixIcon: Icon(Icons.attach_money),
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? "Введите сумму" : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return "Введите сумму";
+                  final number = double.tryParse(value.replaceAll(',', '.'));
+                  if (number == null) return "Введите корректное число";
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
 

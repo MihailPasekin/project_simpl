@@ -1,54 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:project_simpl/database/database_helper.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:project_simpl/object/account.dart';
+import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/providers/account_provider.dart';
 import 'package:project_simpl/screens/add_expense_screen.dart';
 import 'package:project_simpl/screens/add_income_screen.dart';
-
 import 'add_account_screen.dart';
 
-class AccountsScreen extends StatefulWidget {
-  final int userId;
-  final String source; // 🔹 откуда пришёл пользователь: "expense", "income"
+class AccountsScreen extends ConsumerStatefulWidget {
+  final User user;
+  final String source; // "expense" или "income"
 
-  const AccountsScreen({super.key, required this.userId, required this.source});
+  const AccountsScreen({super.key, required this.user, required this.source});
 
   @override
-  State<AccountsScreen> createState() => _AccountsScreenState();
+  ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
 }
 
-class _AccountsScreenState extends State<AccountsScreen> {
-  final db = DatabaseHelper.instance;
-  List<Map<String, dynamic>> _accounts = [];
-
+class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAccounts();
-  }
-
-  Future<void> _loadAccounts() async {
-    final accounts = await db.getAccounts(widget.userId);
-    setState(() {
-      _accounts = accounts;
+    // Загружаем счета пользователя через провайдер
+    Future.microtask(() {
+      ref.read(accountsProvider.notifier).setUser(widget.user);
     });
   }
 
   Future<void> _openAddAccount() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => AddAccountScreen(userId: widget.userId),
-      ),
+      MaterialPageRoute(builder: (_) => AddAccountScreen(user: widget.user)),
     );
 
     if (result == true) {
-      _loadAccounts();
+      // Обновляем счета через провайдер
+      ref.read(accountsProvider.notifier).loadAccounts();
     }
   }
 
-  Future<bool> _deleteAccount(int accountId) async {
+  Future<bool> _deleteAccount(Account account) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text("Удалить счёт?"),
         content: const Text("Вы уверены, что хотите удалить этот счёт?"),
         actions: [
@@ -65,14 +59,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
 
     if (confirm == true) {
-      await db.deleteAccount(accountId);
-      _loadAccounts();
+      await ref.read(accountsProvider.notifier).deleteAccount(account.id!);
       return true;
     }
     return false;
   }
 
-  // 🔹 Цвет AppBar в зависимости от source
   Color _getAppBarColor() {
     switch (widget.source) {
       case "expense":
@@ -86,13 +78,15 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final accounts = ref.watch(accountsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.source == "expense"
-              ? "Выберите счет для расхода"
+              ? "Выберите счёт для расхода"
               : widget.source == "income"
-              ? "Выберите счет для дохода"
+              ? "Выберите счёт для дохода"
               : "Мои счета",
         ),
         backgroundColor: _getAppBarColor(),
@@ -100,7 +94,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
           IconButton(icon: const Icon(Icons.add), onPressed: _openAddAccount),
         ],
       ),
-      body: _accounts.isEmpty
+      body: accounts.isEmpty
           ? const Center(
               child: Text(
                 "Нет счетов",
@@ -108,15 +102,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
               ),
             )
           : ListView.builder(
-              itemCount: _accounts.length,
+              itemCount: accounts.length,
               itemBuilder: (context, index) {
-                final account = _accounts[index];
+                final account = accounts[index];
                 return Dismissible(
-                  key: ValueKey(account["id"]),
+                  key: ValueKey(account.id),
                   direction: DismissDirection.endToStart,
-                  confirmDismiss: (direction) async {
-                    return await _deleteAccount(account["id"]);
-                  },
+                  confirmDismiss: (_) => _deleteAccount(account),
                   background: Container(
                     color: Colors.red,
                     alignment: Alignment.centerRight,
@@ -133,30 +125,28 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         Icons.account_balance_wallet,
                         color: Colors.indigo,
                       ),
-                      title: Text(account["name"]),
+                      title: Text(account.name),
                       subtitle: Text(
-                        "Баланс: ${account["balance"].toStringAsFixed(2)} €",
+                        "Баланс: ${account.balance.toStringAsFixed(2)} €",
                       ),
-                      // 👇 при клике открываем экран расходов конкретного счёта
                       onTap: () {
                         if (widget.source == "expense") {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AddExpenseScreen(
-                                userId: widget.userId,
-                                accountName: account["name"],
+                              builder: (_) => AddExpenseScreen(
+                                user: widget.user,
+                                account: account,
                               ),
                             ),
                           );
-                        }
-                        if (widget.source == "income") {
+                        } else if (widget.source == "income") {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AddIncomeScreen(
-                                userId: widget.userId,
-                                accountName: account["name"],
+                              builder: (_) => AddIncomeScreen(
+                                user: widget.user,
+                                account: account,
                               ),
                             ),
                           );

@@ -1,3 +1,5 @@
+import 'package:project_simpl/object/account.dart';
+import 'package:project_simpl/object/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -26,34 +28,34 @@ class DatabaseHelper {
   // 🔹 Создание таблиц
   Future _createDB(Database db, int version) async {
     await db.execute('''
-    CREATE TABLE users (
+    CREATE TABLE users(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  password TEXT NOT NULL,
+  avatar TEXT,
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL
+);
+  ''');
+
+    await db.execute('''
+    CREATE TABLE accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
       name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      monthlyLimit REAL NOT NULL,
-      avatar TEXT,
+      balance REAL NOT NULL DEFAULT 0,
       createdAt TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
+      updatedAt TEXT NOT NULL,
+      FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
     )
   ''');
-    // Таблица счетов
-    await db.execute('''
-  CREATE TABLE accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    balance REAL NOT NULL DEFAULT 0,
-    createdAt TEXT NOT NULL,
-    updatedAt TEXT NOT NULL,
-    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
-  )
-''');
+
     await db.execute('''
     CREATE TABLE transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
-      type TEXT NOT NULL,              -- "income" или "expense"
+      type TEXT NOT NULL,              
       category TEXT NOT NULL,
       amount REAL NOT NULL,
       note TEXT,
@@ -70,7 +72,6 @@ class DatabaseHelper {
   Future<int> insertUser(Map<String, dynamic> user) async {
     final db = await instance.database;
 
-    // 👇 Добавляем дефолтные значения, если их нет
     final userWithDefaults = {
       ...user,
       "monthlyLimit": user["monthlyLimit"] ?? 0.0,
@@ -79,6 +80,43 @@ class DatabaseHelper {
     };
 
     return await db.insert("users", userWithDefaults);
+  }
+
+  Future<int> registerUser(User user) async {
+    final db = await database;
+    final map = user.toMap();
+    return await db.insert("users", map);
+  }
+
+  // Логин
+  Future<User?> loginUser(String email, String password) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+    if (result.isNotEmpty) return User.fromMap(result.first);
+    return null;
+  }
+
+  // Аккаунты
+  Future<int> addAccount(User user, String name, double balance) async {
+    final db = await database;
+    return await db.insert('accounts', {
+      'user_id': user.id,
+      'account_name': name,
+      'balance': balance,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getUserAccounts(User user) async {
+    final db = await database;
+    return await db.query(
+      'accounts',
+      where: 'user_id = ?',
+      whereArgs: [user.id],
+    );
   }
 
   Future<List<Map<String, dynamic>>> getUsers() async {
@@ -106,31 +144,44 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first : null;
   }
 
-  // ================== TRANSACTIONS ==================
+  // ================== ACCOUNTS ==================
 
-  Future<int> insertAccount(Map<String, dynamic> account) async {
-    final db = await instance.database;
-    return await db.insert("accounts", account);
+  Future<int> updateAccount(Account account) async {
+    final dbClient = await database;
+    return await dbClient.update(
+      'accounts',
+      account.toMap(),
+      where: 'id = ?',
+      whereArgs: [account.id],
+    );
   }
 
-  Future<List<Map<String, dynamic>>> getAccounts(int userId) async {
+  Future<int> insertAccount(Account account) async {
+    final db = await database;
+    return await db.insert(
+      'accounts',
+      account.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Account>> getAccounts(int userId) async {
     final db = await instance.database;
-    return await db.query(
+    final result = await db.query(
       "accounts",
       where: "userId = ?",
       whereArgs: [userId],
       orderBy: "createdAt DESC",
     );
+    return result.map((map) => Account.fromMap(map)).toList();
   }
 
   Future<int> deleteAccount(int accountId) async {
-    final db = await database; // получаем экземпляр базы данных
-    return await db.delete(
-      'accounts', // имя таблицы
-      where: 'id = ?', // условие удаления
-      whereArgs: [accountId], // подставляем id счета
-    );
+    final db = await instance.database;
+    return await db.delete('accounts', where: 'id = ?', whereArgs: [accountId]);
   }
+
+  // ================== TRANSACTIONS ==================
 
   Future<int> insertTransaction(Map<String, dynamic> transaction) async {
     final db = await instance.database;
@@ -167,6 +218,6 @@ class DatabaseHelper {
 
   Future<int> deleteUser(int userId) async {
     final db = await instance.database;
-    return await db.delete('users', where: 'userId = ?', whereArgs: [userId]);
+    return await db.delete('users', where: 'id = ?', whereArgs: [userId]);
   }
 }
