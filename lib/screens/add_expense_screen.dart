@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:project_simpl/object/account.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/account.dart';
+import 'package:project_simpl/models/graphItem.dart';
+import 'package:project_simpl/models/user.dart';
 import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/providers/account_provider.dart';
 
@@ -60,7 +61,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       balance: widget.account.balance - amount,
     );
     await accountsNotifier.updateAccountBalance(updatedAccount);
+    await db.insertTransaction(expense);
 
+    // Обновляем график через Riverpod
+    ref.read(expensesProvider.notifier).loadExpenses(widget.user.id!);
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text("✅ Расход сохранён")));

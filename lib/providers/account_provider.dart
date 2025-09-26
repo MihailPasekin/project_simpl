@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:project_simpl/database/database_helper.dart';
-import 'package:project_simpl/object/account.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/account.dart';
+import 'package:project_simpl/models/user.dart';
 import 'dart:async';
 
 class AccountsNotifier extends StateNotifier<List<Account>> {

@@ -1,5 +1,5 @@
-import 'package:project_simpl/object/account.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/account.dart';
+import 'package:project_simpl/models/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -195,6 +195,19 @@ class DatabaseHelper {
       where: "userId = ?",
       whereArgs: [userId],
       orderBy: "date DESC",
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getExpensesByCategory(int userId) async {
+    final db = await database;
+    return await db.rawQuery(
+      '''
+    SELECT category, SUM(amount) as total
+    FROM transactions
+    WHERE userId = ? AND type = 'expense'
+    GROUP BY category
+  ''',
+      [userId],
     );
   }
 

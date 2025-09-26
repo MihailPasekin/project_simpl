@@ -1,35 +1,20 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:project_simpl/models/graphItem.dart';
 
-class PremiumPieChart extends StatefulWidget {
+class PremiumPieChart extends ConsumerStatefulWidget {
   const PremiumPieChart({super.key});
 
   @override
-  State<PremiumPieChart> createState() => _PremiumPieChartState();
+  ConsumerState<PremiumPieChart> createState() => _PremiumPieChartState();
 }
 
-class _PremiumPieChartState extends State<PremiumPieChart>
+class _PremiumPieChartState extends ConsumerState<PremiumPieChart>
     with SingleTickerProviderStateMixin {
-  final List<double> targetValues = [40, 25, 20, 15, 15];
-  final List<String> titles = [
-    "Жильё",
-    "Еда",
-    "Транспорт",
-    "Развлечения",
-    "Другое",
-  ];
-  final List<List<Color>> gradients = [
-    [Colors.redAccent.shade200, Colors.redAccent.shade700],
-    [Colors.green.shade300, Colors.green.shade800],
-    [Colors.blue.shade300, Colors.blue.shade700],
-    [Colors.orange.shade300, Colors.orange.shade700],
-    [Colors.purple.shade300, Colors.purple.shade700],
-  ];
-
-  List<double> animatedValues = [0, 0, 0, 0, 0];
+  List<double> animatedValues = [];
   int touchedIndex = -1;
-
   late AnimationController _pulseController;
 
   @override
@@ -41,8 +26,6 @@ class _PremiumPieChartState extends State<PremiumPieChart>
       lowerBound: 0.0,
       upperBound: 1.0,
     )..repeat(reverse: true);
-
-    _animateSections();
   }
 
   @override
@@ -51,34 +34,21 @@ class _PremiumPieChartState extends State<PremiumPieChart>
     super.dispose();
   }
 
-  // Поочерёдная анимация секций
-  void _animateSections() async {
-    for (int i = 0; i < targetValues.length; i++) {
-      for (double val = 0; val <= targetValues[i]; val += 1) {
-        await Future.delayed(const Duration(milliseconds: 8));
-        setState(() {
-          animatedValues[i] = val;
-        });
-      }
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-  }
-
-  List<PieChartSectionData> getSections() {
-    return List.generate(animatedValues.length, (i) {
+  List<PieChartSectionData> getSections(List<GraphItem> data) {
+    return List.generate(data.length, (i) {
       bool isTouched = i == touchedIndex;
       double radius =
           (isTouched ? 90 : 70) + (isTouched ? _pulseController.value * 10 : 0);
+
       return PieChartSectionData(
-        value: animatedValues[i],
-        title: "${titles[i]}\n${animatedValues[i].toInt()}%",
+        value: animatedValues.isNotEmpty && i < animatedValues.length
+            ? animatedValues[i]
+            : 0,
+        title:
+            "${data[i].title}\n${(animatedValues.isNotEmpty && i < animatedValues.length ? animatedValues[i].toInt() : 0)}€",
         radius: radius,
         showTitle: true,
-        gradient: LinearGradient(
-          colors: gradients[i],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: data[i].color,
         titleStyle: const TextStyle(
           color: Colors.white,
           fontSize: 12,
@@ -90,31 +60,50 @@ class _PremiumPieChartState extends State<PremiumPieChart>
 
   @override
   Widget build(BuildContext context) {
+    final data = ref.watch(expensesProvider);
+
+    if (data.isEmpty) {
+      return const SizedBox(
+        height: 270,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return SizedBox(
       height: 270,
-      child: AnimatedBuilder(
-        animation: _pulseController,
-        builder: (context, child) {
-          return PieChart(
-            PieChartData(
-              centerSpaceRadius: 50,
-              sectionsSpace: 4,
-              sections: getSections(),
-              pieTouchData: PieTouchData(
-                touchCallback: (event, response) {
-                  setState(() {
-                    if (response != null && response.touchedSection != null) {
-                      touchedIndex =
-                          response.touchedSection!.touchedSectionIndex;
-                    } else {
-                      touchedIndex = -1;
-                    }
-                  });
-                },
+      child: PieChart(
+        PieChartData(
+          centerSpaceRadius: 50,
+          sectionsSpace: 4,
+          sections: List.generate(data.length, (i) {
+            bool isTouched = i == touchedIndex;
+            double radius = isTouched ? 90 : 70;
+
+            return PieChartSectionData(
+              value: data[i].value,
+              title: "${data[i].title}\n${data[i].value.toInt()}€",
+              radius: radius,
+              showTitle: true,
+              color: data[i].color,
+              titleStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
-            ),
-          );
-        },
+            );
+          }),
+          pieTouchData: PieTouchData(
+            touchCallback: (event, response) {
+              setState(() {
+                if (response != null && response.touchedSection != null) {
+                  touchedIndex = response.touchedSection!.touchedSectionIndex;
+                } else {
+                  touchedIndex = -1;
+                }
+              });
+            },
+          ),
+        ),
       ),
     );
   }

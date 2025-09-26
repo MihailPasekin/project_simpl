@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/function/registrationValidators.dart';
 import 'package:project_simpl/database/database_helper.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/user.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
