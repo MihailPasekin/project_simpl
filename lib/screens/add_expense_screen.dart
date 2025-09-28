@@ -53,8 +53,6 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       "updatedAt": DateTime.now().toIso8601String(),
     };
 
-    await db.insertTransaction(expense);
-
     // 🟢 Уменьшаем баланс счета через провайдер
     final accountsNotifier = ref.read(accountsProvider.notifier);
     final updatedAccount = widget.account.copyWith(
