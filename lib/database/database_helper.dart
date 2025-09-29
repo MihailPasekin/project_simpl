@@ -198,6 +198,30 @@ class DatabaseHelper {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getExpensesByCategoryAndPeriod(
+    int userId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await database;
+
+    // Преобразуем даты в ISO строку
+    String startIso = start.toIso8601String();
+    String endIso = end.toIso8601String();
+
+    final result = await db.rawQuery(
+      '''
+    SELECT category, SUM(amount) as total
+    FROM transactions
+    WHERE userId = ? AND type = 'expense' AND date BETWEEN ? AND ?
+    GROUP BY category
+  ''',
+      [userId, startIso, endIso],
+    );
+
+    return result;
+  }
+
   Future<List<Map<String, dynamic>>> getExpensesByCategory(int userId) async {
     final db = await database;
     return await db.rawQuery(

@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const bool resetDb = true; // 👉 меняешь на true только когда надо дропнуть
+  const bool resetDb = false; // 👉 меняешь на true только когда надо дропнуть
   // ignore: dead_code
   if (resetDb) {
     await deleteDatabase(await getDatabasesPath() + '/app.db');

@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                const PremiumPieChart(),
+                PremiumPieChart(userId: widget.user.id!),
                 const SizedBox(height: 30),
                 Row(
                   children: [

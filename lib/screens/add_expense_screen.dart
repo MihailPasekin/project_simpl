@@ -27,6 +27,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _noteController = TextEditingController();
   String _category = "Еда";
   DateTime _selectedDate = DateTime.now();
+  String _selectedPeriod = 'day'; // по умолчанию день
   final db = DatabaseHelper.instance;
 
   @override
@@ -61,8 +62,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     await accountsNotifier.updateAccountBalance(updatedAccount);
     await db.insertTransaction(expense);
 
-    // Обновляем график через Riverpod
-    ref.read(expensesProvider.notifier).loadExpenses(widget.user.id!);
+    // 🔹 Обновляем график с выбранным пользователем периодом
+    ref
+        .read(expensesProvider.notifier)
+        .loadExpenses(widget.user.id!, _selectedPeriod);
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text("✅ Расход сохранён")));

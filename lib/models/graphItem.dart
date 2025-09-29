@@ -6,8 +6,14 @@ class GraphItem {
   final String title;
   final double value;
   final Color color;
+  final DateTime date;
 
-  GraphItem({required this.title, required this.value, required this.color});
+  GraphItem({
+    required this.date,
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 }
 
 final expensesProvider =
@@ -18,9 +24,33 @@ final expensesProvider =
 class ExpensesNotifier extends StateNotifier<List<GraphItem>> {
   ExpensesNotifier() : super([]);
 
-  /// Загружаем расходы по категориям
-  Future<void> loadExpenses(int userId) async {
-    final rawData = await DatabaseHelper.instance.getExpensesByCategory(userId);
+  /// Загружаем расходы по категориям с фильтром по периоду
+  /// period: "day", "week", "month", "year"
+  Future<void> loadExpenses(int userId, String period) async {
+    DateTime now = DateTime.now();
+    DateTime start;
+
+    // Определяем дату начала периода
+    switch (period) {
+      case 'day':
+        start = DateTime(now.year, now.month, now.day);
+        break;
+      case 'week':
+        start = now.subtract(const Duration(days: 7));
+        break;
+      case 'month':
+        start = DateTime(now.year, now.month, 1);
+        break;
+      case 'year':
+        start = DateTime(now.year, 1, 1);
+        break;
+      default:
+        start = DateTime(2000); // на всякий случай
+    }
+
+    // Получаем агрегированные данные из базы с фильтром по дате
+    final rawData = await DatabaseHelper.instance
+        .getExpensesByCategoryAndPeriod(userId, start, now);
 
     final categoryColors = {
       "Жильё": Colors.purple.shade700,
@@ -30,8 +60,10 @@ class ExpensesNotifier extends StateNotifier<List<GraphItem>> {
       "Другое": Colors.grey.shade700,
     };
 
+    // Преобразуем данные в GraphItem
     state = rawData.map((e) {
       return GraphItem(
+        date: now, // можно просто текущая дата, суммы уже агрегированы
         title: e['category'] as String,
         value: (e['total'] as num).toDouble(),
         color: categoryColors[e['category']] ?? Colors.black,
@@ -39,8 +71,8 @@ class ExpensesNotifier extends StateNotifier<List<GraphItem>> {
     }).toList();
   }
 
-  /// Метод для форсированного обновления (например после добавления транзакции)
-  Future<void> refresh(int userId) async {
-    await loadExpenses(userId);
+  /// Метод для обновления после добавления транзакции
+  Future<void> refresh(int userId, String period) async {
+    await loadExpenses(userId, period);
   }
 }
