@@ -40,6 +40,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
         "userId": widget.user.id!,
         "type": "income",
         "category": _category,
+        "accountId": widget.account.id!,
         "amount": amount,
         "note": _noteController.text,
         "date": _selectedDate.toIso8601String(),

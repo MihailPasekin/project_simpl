@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/models/user.dart';
 import 'package:project_simpl/providers/account_provider.dart';
 import 'package:project_simpl/providers/income_provider.dart';
+import 'package:project_simpl/screens/account_details_screen.dart';
 import 'package:project_simpl/screens/add_account_screen.dart';
 import 'package:project_simpl/screens/account_sscreen.dart';
 import 'package:project_simpl/widget/graph_with_circles.dart';
@@ -178,6 +180,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       color: Colors.white70,
                                     ),
                                   ),
+                                  // 🔹 Кликабельность
+                                  onTap: () async {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AccountDetailsScreen(
+                                          account:
+                                              account, // ✅ передаём выбранный аккаунт
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             );

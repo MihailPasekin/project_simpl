@@ -55,6 +55,7 @@ class DatabaseHelper {
     CREATE TABLE transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
+      accountId INTEGER NOT NULL,
       type TEXT NOT NULL,              
       category TEXT NOT NULL,
       amount REAL NOT NULL,
@@ -228,6 +229,26 @@ class DatabaseHelper {
       whereArgs: whereArgs,
       orderBy: "date ASC",
     );
+  }
+
+  // В DatabaseHelper
+  Future<List<Map<String, dynamic>>> getTransactionsForAccount(
+    int userId,
+    int accountId,
+  ) async {
+    final db = await database;
+
+    // Пока в таблице нет accountId, можно фильтровать по note или category
+    // если в note хранится info о счёте, иначе возвращаем все транзакции пользователя
+    final result = await db.query(
+      "transactions",
+      where: "userId = ?",
+      whereArgs: [userId],
+      orderBy: "date ASC",
+    );
+
+    // Если хочешь, здесь можно оставить фильтр по note, если note содержит account.name
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> getExpensesByCategoryAndPeriod(

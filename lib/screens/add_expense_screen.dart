@@ -46,6 +46,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final expense = {
       "userId": widget.user.id!,
       "type": "expense",
+      "accountId": widget.account.id!,
       "category": _category,
       "amount": amount,
       "note": _noteController.text,
