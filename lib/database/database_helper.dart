@@ -198,6 +198,38 @@ class DatabaseHelper {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getIncomes(int userId) async {
+    final db = await database;
+    return await db.query(
+      "transactions",
+      where: "userId = ? AND type = ?",
+      whereArgs: [userId, "income"],
+      orderBy: "date ASC",
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getTransactionsByType(
+    int userId,
+    int? accountId,
+    String type,
+  ) async {
+    final db = await database;
+    String whereClause = "userId = ? AND type = ?";
+    List<dynamic> whereArgs = [userId, type];
+
+    if (accountId != null) {
+      whereClause += " AND accountId = ?";
+      whereArgs.add(accountId);
+    }
+
+    return await db.query(
+      "transactions",
+      where: whereClause,
+      whereArgs: whereArgs,
+      orderBy: "date ASC",
+    );
+  }
+
   Future<List<Map<String, dynamic>>> getExpensesByCategoryAndPeriod(
     int userId,
     DateTime start,

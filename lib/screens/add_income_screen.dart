@@ -5,6 +5,7 @@ import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/models/account.dart';
 import 'package:project_simpl/models/user.dart';
 import 'package:project_simpl/providers/account_provider.dart';
+import 'package:project_simpl/providers/income_provider.dart'; // <-- добавляем провайдер доходов
 
 class AddIncomeScreen extends ConsumerStatefulWidget {
   final User user;
@@ -46,19 +47,25 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
         "updatedAt": DateTime.now().toIso8601String(),
       };
 
+      // 🔹 Сохраняем доход в базу
       await db.insertTransaction(income);
 
-      // Обновляем баланс через провайдер
+      // 🔹 Обновляем баланс через провайдер аккаунтов
       final accountsNotifier = ref.read(accountsProvider.notifier);
       final updatedAccount = widget.account.copyWith(
         balance: widget.account.balance + amount,
       );
       await accountsNotifier.updateAccountBalance(updatedAccount);
 
+      // 🔹 Обновляем провайдер доходов, чтобы график перерисовался
+      ref.invalidate(incomeProvider(widget.user.id!));
+
+      // 🔹 Показываем уведомление
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("✅ Доход сохранён")));
 
+      // 🔹 Закрываем экран
       Navigator.pop(context, true);
     }
   }

@@ -1,207 +1,168 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'dart:math';
-import 'package:flutter/foundation.dart';
 
-class SimpleFancyMonthlyIncomeChart extends StatefulWidget {
-  final List<String> months;
-  final List<double> values;
+class IncomeEntry {
+  final DateTime date;
+  final double income;
 
-  const SimpleFancyMonthlyIncomeChart({
-    Key? key,
-    required this.months,
-    required this.values,
-  }) : super(key: key);
-
-  @override
-  _SimpleFancyMonthlyIncomeChartState createState() =>
-      _SimpleFancyMonthlyIncomeChartState();
+  IncomeEntry(this.date, this.income);
 }
 
-class _SimpleFancyMonthlyIncomeChartState
-    extends State<SimpleFancyMonthlyIncomeChart> {
-  int? touchedIndex;
+class IncomeChart extends StatelessWidget {
+  final List<IncomeEntry> incomeData;
+
+  const IncomeChart({super.key, required this.incomeData});
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(
-      symbol: '€',
-      decimalDigits: 0,
-    );
+    if (incomeData.isEmpty) {
+      return const Center(child: Text("No income data"));
+    }
 
-    // Безопасные maxY и barWidth
-    final maxY = widget.values.isNotEmpty
-        ? (widget.values.reduce(max) * 1.2)
-        : 10.0;
-
-    final barWidth = widget.values.isNotEmpty
-        ? max(12.0, 300.0 / widget.values.length * 0.6)
-        : 12.0; // все числа с .0, чтобы они были double
-
-    List<BarChartGroupData> barGroups = List.generate(widget.values.length, (
-      i,
-    ) {
-      final value = widget.values[i];
-
-      // Цвет по сравнению с предыдущим месяцем
-      Color topColor;
-      Color bottomColor;
-      if (i == 0 || value >= widget.values[i - 1]) {
-        topColor = Colors.green;
-        bottomColor = Colors.greenAccent.shade200;
-      } else {
-        topColor = Colors.red;
-        bottomColor = Colors.redAccent.shade200;
-      }
-
-      final gradient = LinearGradient(
-        colors: [bottomColor, topColor],
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-      );
-
-      return BarChartGroupData(
-        x: i,
-        barRods: [
-          BarChartRodData(
-            toY: value,
-            width: barWidth,
-            borderRadius: BorderRadius.circular(6),
-            gradient: gradient,
-            backDrawRodData: BackgroundBarChartRodData(
-              show: true,
-              color: Colors.grey.withOpacity(0.1),
+    // ✅ Один доход — fallback UI
+    if (incomeData.length == 1) {
+      final entry = incomeData.first;
+      return Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.indigo.shade600, Colors.blueGrey.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.savings, size: 64, color: Colors.white70),
+            const SizedBox(height: 16),
+            Text(
+              NumberFormat.currency(symbol: '\$').format(entry.income),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              DateFormat("MMMM yyyy").format(entry.date),
+              style: const TextStyle(fontSize: 18, color: Colors.white70),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ✅ Несколько доходов — график
+    final double maxIncome = incomeData
+        .map((e) => e.income)
+        .reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.indigo.shade600, Colors.blueGrey.shade400],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
-        showingTooltipIndicators: [0],
-      );
-    });
-
-    return SizedBox(
-      height: 350,
-      child: Stack(
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          BarChart(
-            BarChartData(
-              maxY: maxY,
-              barGroups: barGroups,
-              alignment: BarChartAlignment.spaceAround,
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      int index = value.toInt();
-                      if (index >= 0 && index < widget.months.length) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            widget.months[index],
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 50,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        currencyFormatter.format(value),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              gridData: FlGridData(
-                show: true,
-                drawHorizontalLine: true,
-                horizontalInterval: 100,
-                getDrawingHorizontalLine: (value) => FlLine(
-                  color: Colors.grey.withOpacity(0.2),
-                  strokeWidth: 1,
-                  dashArray: [5, 5],
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchCallback: (event, response) {
-                  if (response != null &&
-                      response.spot != null &&
-                      event.isInterestedForInteractions) {
-                    setState(() {
-                      touchedIndex = response.spot!.touchedBarGroupIndex;
-                    });
-                  } else {
-                    setState(() {
-                      touchedIndex = null;
-                    });
-                  }
-                },
-                touchTooltipData: BarTouchTooltipData(
-                  tooltipPadding: const EdgeInsets.all(8),
-                  tooltipRoundedRadius: 8,
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    return BarTooltipItem(
-                      '${widget.months[groupIndex]}: ${currencyFormatter.format(widget.values[groupIndex])}',
-                      const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
-              ),
+          const Text(
+            'Income over Time',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
             ),
-            swapAnimationDuration: const Duration(milliseconds: 800),
-            swapAnimationCurve: Curves.easeOutCubic,
           ),
-          // Стрелки роста/падения
-          Positioned.fill(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final chartHeight = constraints.maxHeight;
-                final chartWidth = constraints.maxWidth;
-                return Stack(
-                  children: List.generate(widget.values.length, (i) {
-                    final barX =
-                        (i + 0.5) * (chartWidth / widget.values.length);
-                    final value = widget.values[i];
-                    Icon? icon;
-                    if (i > 0) {
-                      if (value > widget.values[i - 1]) {
-                        icon = const Icon(
-                          Icons.arrow_upward,
-                          color: Colors.green,
-                          size: 18,
-                        );
-                      } else if (value < widget.values[i - 1]) {
-                        icon = const Icon(
-                          Icons.arrow_downward,
-                          color: Colors.red,
-                          size: 18,
-                        );
-                      }
-                    }
-                    if (icon != null) {
-                      return Positioned(
-                        left: barX - 9,
-                        top: chartHeight - (value / maxY) * chartHeight - 25,
-                        child: icon,
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-                );
-              },
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: incomeData.length * 60.0,
+              height: 200,
+              child: LineChart(
+                LineChartData(
+                  minY: 0,
+                  maxY: maxIncome * 1.1,
+                  gridData: FlGridData(show: true, drawVerticalLine: true),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        getTitlesWidget: (value, meta) {
+                          if (value.toInt() < 0 ||
+                              value.toInt() >= incomeData.length) {
+                            return Container();
+                          }
+                          final date = incomeData[value.toInt()].date;
+                          return Text(
+                            DateFormat("MMM yyyy").format(date),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: (maxIncome / 5).ceilToDouble(),
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            '\$${value.toInt()}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: List.generate(
+                        incomeData.length,
+                        (index) =>
+                            FlSpot(index.toDouble(), incomeData[index].income),
+                      ),
+                      isCurved: true,
+                      gradient: const LinearGradient(
+                        colors: [Colors.white, Colors.white70],
+                      ),
+                      barWidth: 3,
+                      dotData: FlDotData(show: true),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
