@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/database/database_helper.dart';
-import 'package:project_simpl/object/account.dart';
-import 'package:project_simpl/object/user.dart'; // ✅ не забудь подключить модель
+import 'package:project_simpl/models/account.dart';
+import 'package:project_simpl/models/user.dart'; // ✅ не забудь подключить модель
 
 class AddAccountScreen extends StatefulWidget {
   final User user;

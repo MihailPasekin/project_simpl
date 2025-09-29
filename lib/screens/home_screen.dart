@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/user.dart';
 import 'package:project_simpl/providers/account_provider.dart';
 import 'package:project_simpl/screens/add_account_screen.dart';
 import 'package:project_simpl/screens/account_sscreen.dart';
@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                const GraphWithCircles(),
+                PremiumPieChart(userId: widget.user.id!),
                 const SizedBox(height: 30),
                 Row(
                   children: [
@@ -267,7 +267,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const IncomeLineChart(),
+                SimpleFancyMonthlyIncomeChart(
+                  months: [
+                    'Янв',
+                    'Фев',
+                    'Мар',
+                    'Апр',
+                    'Май',
+                    'Июнь',
+                    'Июль',
+                    'Август',
+                    'Сентябрь',
+                    'Октябрь',
+                    'Ноябрь',
+                    'Декабарь',
+                  ],
+                  values: [
+                    3200,
+                    4000,
+                    1000,
+                    2000,
+                    3200,
+                    4000,
+                    1000,
+                    2000,
+                    3200,
+                    4000,
+                    1000,
+                    2000,
+                  ],
+                ),
               ],
             ),
           ),

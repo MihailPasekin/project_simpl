@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:project_simpl/database/database_helper.dart';
-import 'package:project_simpl/object/account.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/account.dart';
+import 'package:project_simpl/models/user.dart';
 import 'package:project_simpl/providers/account_provider.dart';
 
 class AddIncomeScreen extends ConsumerStatefulWidget {
@@ -123,11 +123,13 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                   labelText: "Категория",
                   border: OutlineInputBorder(),
                 ),
-                items: ["Зарплата", "Подарок", "Бизнес", "Другое"]
-                    .map(
-                      (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
-                    )
-                    .toList(),
+                items:
+                    ["Зарплата", "Фриланс", "Инвестиции", "Подарки", "Другое"]
+                        .map(
+                          (cat) =>
+                              DropdownMenuItem(value: cat, child: Text(cat)),
+                        )
+                        .toList(),
                 onChanged: (value) => setState(() => _category = value!),
               ),
               const SizedBox(height: 16),

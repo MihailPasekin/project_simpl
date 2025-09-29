@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:project_simpl/object/account.dart';
-import 'package:project_simpl/object/user.dart';
+import 'package:project_simpl/models/account.dart';
+import 'package:project_simpl/models/graphItem.dart';
+import 'package:project_simpl/models/user.dart';
 import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/providers/account_provider.dart';
 
@@ -26,6 +27,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _noteController = TextEditingController();
   String _category = "Еда";
   DateTime _selectedDate = DateTime.now();
+  String _selectedPeriod = 'day'; // по умолчанию день
   final db = DatabaseHelper.instance;
 
   @override
@@ -52,14 +54,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       "updatedAt": DateTime.now().toIso8601String(),
     };
 
-    await db.insertTransaction(expense);
-
     // 🟢 Уменьшаем баланс счета через провайдер
     final accountsNotifier = ref.read(accountsProvider.notifier);
     final updatedAccount = widget.account.copyWith(
       balance: widget.account.balance - amount,
     );
     await accountsNotifier.updateAccountBalance(updatedAccount);
+    await db.insertTransaction(expense);
+
+    // 🔹 Обновляем график с выбранным пользователем периодом
+    ref
+        .read(expensesProvider.notifier)
+        .loadExpenses(widget.user.id!, _selectedPeriod);
 
     ScaffoldMessenger.of(
       context,
@@ -131,7 +137,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   labelText: "Категория",
                   border: OutlineInputBorder(),
                 ),
-                items: ["Еда", "Транспорт", "Развлечения", "Другое"]
+                items: ["Еда", "Транспорт", "Развлечения", "Жильё", "Другое"]
                     .map(
                       (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
                     )

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_simpl/database/database_helper.dart';
 import 'package:project_simpl/screens/home_screen.dart';
+import 'package:sqflite/sqflite.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,7 +22,14 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  @override
+  void printDbPath() async {
+    final dbPath = await getDatabasesPath();
+    print("📂 DB Path: $dbPath");
+  }
+
   Future<void> _login() async {
+    printDbPath();
     if (_formKey.currentState!.validate()) {
       try {
         // Получаем пользователя из базы
@@ -148,6 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: _login,
+
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Colors.blueAccent,
