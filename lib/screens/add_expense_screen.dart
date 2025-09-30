@@ -94,8 +94,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         title: Text("Счет ${widget.account.name}"),
         backgroundColor: Colors.redAccent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      resizeToAvoidBottomInset: true, // чтобы экран поднимался при клавиатуре
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
         child: Form(
           key: _formKey,
           child: Column(

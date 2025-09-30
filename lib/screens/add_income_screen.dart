@@ -90,8 +90,15 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
         title: Text("Счет ${widget.account.name}"),
         backgroundColor: Colors.green,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      resizeToAvoidBottomInset:
+          true, // экран поднимается при открытии клавиатуры
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -106,6 +113,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
               // 💰 Сумма
               TextFormField(
                 controller: _amountController,
